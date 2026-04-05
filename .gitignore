@@ -8,10 +8,6 @@ __pycache__/
 data/
 *.csv
 
-# Artifacts / outputs
-artifacts/
-*.png
-*.jpg
 
 # Notebooks
 .ipynb_checkpoints/
