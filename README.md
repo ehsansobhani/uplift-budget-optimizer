@@ -1,122 +1,219 @@
-# Retail Media Campaign Optimizer
+# 💰 Optimal Budget Allocation for Retail Media (Uplift Modeling)
 
-**End-to-end ML system for retail media campaign targeting & incrementality measurement**
+An end-to-end machine learning system for **causal marketing optimization** — identifying *which customers to target* and *how much budget to allocate* to maximize incremental profit.
 
-Built on the [X5 RetailHero](https://ods.ai/competitions/x5-retailhero-uplift-modeling) dataset — a real grocery loyalty card dataset from X5 Retail Group with randomized controlled trial (RCT) outcomes.
+Built on the **X5 RetailHero dataset**, this project moves beyond prediction and focuses on **decision-making under budget constraints**.
 
-## What This Project Does
+---
 
-A large retailer operates a **Retail Media Network** where CPG brands advertise to loyalty card holders via SMS campaigns. This ML system decides **which customers should receive each campaign** to maximize incremental purchases — and then measures whether the campaign actually worked.
+# 📊 Dataset
 
-The core ML technique is **uplift modeling** (a.k.a. incremental/causal modeling), which estimates the *causal effect* of a campaign on each individual customer, rather than just predicting who will buy.
+This project uses the:
 
-## Quick Start
+👉 **X5 RetailHero Uplift Modeling Dataset**
+https://ods.ai/competitions/x5-retailhero-uplift-modeling
+
+It is a real-world dataset from a large grocery retailer containing:
+
+| Table              | Description                          |
+| ------------------ | ------------------------------------ |
+| `clients.csv`      | Customer demographics & loyalty info |
+| `products.csv`     | Product catalog                      |
+| `purchases.csv`    | Transaction history (45M+ rows)      |
+| `uplift_train.csv` | RCT data (treatment + outcome)       |
+| `uplift_test.csv`  | Holdout set for scoring              |
+
+---
+
+# 🚀 What This System Does
+
+* Estimates **individual treatment effect (uplift)**
+* Ranks customers by **incremental impact**
+* Simulates campaign performance under **budget constraints**
+* Computes **profit = revenue − cost**
+* Finds **optimal budget (argmax profit)**
+
+---
+
+# 🧠 Core Pipeline
+
+```
+Raw Data → Feature Engineering → Uplift Models → Evaluation → Budget Optimization → Dashboard
+```
+
+---
+
+# 📈 Results
+
+* **Best Model:** S-Learner
+* **AUUC:** ~1137
+* **Uplift@30%:** ~6.7%
+* **Observed ATE:** ~3.3%
+
+### 💰 Business Impact
+
+* +60% revenue vs random targeting
+* ROI: ~3259%
+* Optimal targeting uses **partial population**, not all users
+
+---
+
+# 💻 Project Structure (Actual Repo)
+
+```
+retail-media-campaign-optimizer/
+│
+├── artifacts/                  # Generated outputs
+│   ├── submission.csv
+│   ├── model_comparison.csv
+│   ├── qini_curves.png
+│   ├── budget_curve.csv
+│   ├── optimal_budget.png
+│   ├── best_scores.npy
+│   ├── y_test.npy
+│   └── t_test.npy
+│
+├── configs/                    # Config files
+├── dashboard/                  # (optional future dashboard modules)
+├── data/                       # Local dataset (not committed)
+├── src/                        # Core ML pipeline
+├── tests/                      # Unit tests
+│
+├── app.py                      # Streamlit dashboard
+├── main_full.py                # Full pipeline
+├── Dockerfile
+├── .gitignore
+└── README.md
+```
+
+---
+
+# ⚙️ How to Run
+
+## 1. Install dependencies
 
 ```bash
-# Install dependencies
-pip install lightgbm pandas numpy scikit-learn scikit-uplift scipy \
-  fastapi uvicorn pydantic pandera pyarrow matplotlib seaborn optuna
-
-# Run the full pipeline (synthetic data, ~3 minutes)
-python main.py
-
-# Run with more data
-python main.py --n-clients 50000 --n-purchases 2000000
-
-# Run with Optuna hyperparameter optimization
-python main.py --optuna 50
-
-# Run tests
-pytest tests/ -v
+pip install -r requirements.txt
 ```
 
-## Pipeline Output
+---
 
-```
-============================================================
-MODEL COMPARISON
-============================================================
-          Model    AUUC  Uplift@10%  Uplift@30%  Uplift@50%
-       x_learner  0.0847      0.0612      0.0453      0.0321
-      t_learner   0.0793      0.0558      0.0402      0.0298
- class_transform   0.0761      0.0534      0.0389      0.0276
-       s_learner  0.0712      0.0491      0.0362      0.0254
+## 2. Run full pipeline
 
-============================================================
-A/B TEST SIMULATION (Budget = 30%)
-============================================================
- Strategy  N Targeted  ATE (targeted)  Increm. Revenue ($)    ROI
-    model       3750          0.0453             $4246.88   2831%
-   random       3750          0.0298             $2793.75   1862%
-      all      12500          0.0310             $9687.50   775%
+```bash
+python main_full.py
 ```
 
-## Architecture
+This generates:
 
-```
-Data Ingest → Feature Engineering → Uplift Model Training → Production Serving
-     │              │                      │                       │
-  clients.csv    25+ features         5 model variants       FastAPI + Redis
-  purchases.csv  (RFM, category,     (S/T/X/CVT/DR)        POST /v1/rank
-  products.csv    temporal, basket,   Cross-validated        p95 < 50ms
-  uplift_train    demographics)       AUUC selection
-                                           │
-                              A/B Test Simulation + Incrementality
-                              Power Analysis + Bootstrap CIs
-                              Drift Detection (PSI, KS-test)
-```
+* model outputs
+* Qini curves
+* budget optimization results
+* `submission.csv`
 
-## Project Structure
+---
 
-```
-src/
-├── data/
-│   ├── ingest.py          # X5 download or synthetic generation
-│   └── schema.py          # Pandera data contracts
-├── features/
-│   └── pipeline.py        # 5 feature groups, 25+ features
-├── models/
-│   ├── uplift_models.py   # S/T/X-Learner, CVT, DR-Learner
-│   ├── evaluate.py        # AUUC, Qini curves, Uplift@K%
-│   └── train.py           # Training orchestrator + Optuna HPO
-├── serving/
-│   └── app.py             # FastAPI inference endpoints
-├── experimentation/
-│   └── ab_simulator.py    # A/B test simulation, power analysis
-└── monitoring/
-    └── drift.py           # PSI, KS-test, data quality checks
+## 3. Run Streamlit dashboard
+
+```bash
+streamlit run app.py
 ```
 
-## Uplift Models Implemented
+---
 
-| Model | Approach | Best For |
-|-------|----------|----------|
-| **S-Learner** | Single model with treatment as feature | Baseline |
-| **T-Learner** | Separate models for treatment/control | Balanced groups |
-| **X-Learner** | Cross-estimation + propensity weighting | Imbalanced groups |
-| **Class Transform** | Reduces uplift to standard classification | Simplicity |
-| **DR-Learner** | Doubly robust (CausalML) | Robustness |
+# 📊 Streamlit Dashboard (Important)
 
-## Key Skills Demonstrated
+The dashboard:
 
-- **Feature engineering pipelines** from raw transaction logs (RFM, category affinity, temporal behavior)
-- **Causal/uplift modeling** — 5 approaches compared with proper evaluation
-- **Production ML serving** — FastAPI with latency targets, feature store pattern
-- **Experimentation** — A/B test simulation, power analysis, bootstrap CIs, Qini curves
-- **Monitoring** — PSI drift detection, KS-tests, data quality checks
-- **CI/CD** — GitHub Actions, pytest, Docker
+* automatically loads:
 
-## Dataset
+```python
+artifacts/submission.csv
+```
 
-The X5 RetailHero dataset contains loyalty card transactions from X5 Retail Group (Russia's largest food retailer). The project includes a synthetic data generator that mirrors the exact schema for environments without network access.
+👉 **No file upload is required**
 
-| Table | Rows | Description |
-|-------|------|-------------|
-| clients | 50K | Customer demographics, loyalty card tenure |
-| products | 5K | SKU catalog with department/aisle hierarchy |
-| purchases | 2M | Transaction history (pre-campaign) |
-| uplift_train | 50K | RCT outcomes: treatment_flg + target |
+---
 
-## License
+## ⚠️ If You Use Your Own Data
+
+You must update this line in:
+
+```
+app.py
+```
+
+```python
+GITHUB_RAW_URL = "https://raw.githubusercontent.com/<your-repo>/artifacts/submission.csv"
+```
+
+Otherwise the dashboard will not load your data.
+
+---
+
+# 📈 Dashboard Features
+
+* 📊 Profit vs Budget curve
+* 📈 Incremental conversions
+* 💰 Optimal budget (argmax profit)
+* ⚙️ Adjustable business parameters
+* 🧠 Decision-focused insights
+
+---
+
+# 🧠 Key Insights
+
+* Uplift is **heterogeneous across customers**
+* Increasing budget leads to **diminishing returns**
+* Optimal strategy is **not full targeting**
+* Decision-making must be **profit-driven**
+
+---
+
+# 🔥 Why This Project Stands Out
+
+Most ML projects:
+
+* focus on prediction
+
+This project:
+
+* focuses on **decision optimization under constraints**
+
+---
+
+# 🧪 Tech Stack
+
+* Python
+* Pandas / NumPy
+* LightGBM
+* Scikit-learn
+* Plotly / Matplotlib
+* Streamlit
+
+---
+
+# 🚀 Future Improvements
+
+* Policy learning (threshold optimization)
+* FastAPI deployment
+* Multi-campaign optimization
+* Real-time inference
+* Docker + CI/CD
+
+---
+
+# 📌 Summary
+
+This project demonstrates:
+
+* scalable ML pipelines
+* causal inference (uplift modeling)
+* business-driven optimization
+* end-to-end system design
+
+---
+
+# 📎 License
 
 MIT
