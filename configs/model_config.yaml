@@ -1,0 +1,46 @@
+default_config:
+  n_estimators: 300
+  max_depth: 6
+  learning_rate: 0.05
+  min_child_samples: 50
+  subsample: 0.8
+  colsample_bytree: 0.8
+  reg_alpha: 0.1
+  reg_lambda: 1.0
+
+optuna_search_space:
+  n_estimators: [100, 500]
+  max_depth: [3, 8]
+  learning_rate: [0.01, 0.2]
+  min_child_samples: [20, 200]
+  subsample: [0.6, 1.0]
+  colsample_bytree: [0.5, 1.0]
+  reg_alpha: [0.001, 10.0]
+  reg_lambda: [0.001, 10.0]
+
+training:
+  test_size: 0.25
+  cv_folds: 5
+  random_state: 42
+  models_to_train:
+    - s_learner
+    - t_learner
+    - x_learner
+    - class_transform
+
+evaluation:
+  primary_metric: auuc
+  uplift_at_k: [0.10, 0.20, 0.30, 0.50]
+  n_bootstrap: 1000
+
+serving:
+  latency_targets:
+    single_score_p95_ms: 10
+    batch_rank_p95_ms: 500
+    health_p95_ms: 5
+
+monitoring:
+  psi_warning: 0.1
+  psi_critical: 0.2
+  ks_alpha: 0.01
+  check_interval_hours: 6

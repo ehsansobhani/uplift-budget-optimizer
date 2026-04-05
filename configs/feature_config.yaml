@@ -1,0 +1,18 @@
+feature_groups:
+  rfm:
+    enabled: true
+    windows: [7, 14, 30, 60, 90]
+  
+  category:
+    enabled: true
+    top_n_categories: 10
+  
+  temporal:
+    enabled: true
+  
+  basket:
+    enabled: true
+  
+  demographics:
+    enabled: true
+    age_bins: [0, 25, 35, 45, 55, 65, 100]

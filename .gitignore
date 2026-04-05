@@ -1,0 +1,26 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Data (IMPORTANT)
+data/
+*.csv
+
+# Artifacts / outputs
+artifacts/
+*.png
+*.jpg
+
+# Notebooks
+.ipynb_checkpoints/
+
+# Env
+.env
+venv/
+.venv/
+
+# OS
+.DS_Store
+Thumbs.db
